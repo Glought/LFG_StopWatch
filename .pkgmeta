@@ -3,32 +3,32 @@ enable-nolib-creation: no
 
 
 externals:
-  Libs/LibStub: 
+  Libs/LibStub:
     url: https://repos.wowace.com/wow/libstub/trunk
-  Libs/AceAddon-3.0: 
+  Libs/AceAddon-3.0:
     url: https://repos.wowace.com/wow/ace3/trunk/AceAddon-3.0
   Libs/AceEvent-3.0:
     url: https://repos.wowace.com/wow/ace3/trunk/AceEvent-3.0
-  Libs/AceConsole-3.0: 
+  Libs/AceConsole-3.0:
     url: https://repos.wowace.com/wow/ace3/trunk/AceConsole-3.0
-  Libs/AceDB-3.0: 
+  Libs/AceDB-3.0:
     url: https://repos.wowace.com/wow/ace3/trunk/AceDB-3.0
-  Libs/AceDBOptions-3.0: 
+  Libs/AceDBOptions-3.0:
     url: https://repos.wowace.com/wow/ace3/trunk/AceDBOptions-3.0
-  Libs/AceTimer-3.0: 
+  Libs/AceTimer-3.0:
     url: https://repos.wowace.com/wow/ace3/trunk/AceTimer-3.0
-  Libs/AceGui-3.0: 
+  Libs/AceGui-3.0:
     url: https://repos.wowace.com/wow/ace3/trunk/AceGUI-3.0
-  Libs/AceConfig-3.0: 
+  Libs/AceConfig-3.0:
     url: https://repos.wowace.com/wow/ace3/trunk/AceConfig-3.0
-  Libs/AceHook-3.0: url: 
+  Libs/AceHook-3.0: url:
     url: https://repos.wowace.com/wow/ace3/trunk/AceHook-3.0
-  Libs/AceLocale-3.0: 
+  Libs/AceLocale-3.0:
     url: https://repos.wowace.com/wow/ace3/trunk/AceLocale-3.0
-  Libs/LibDBIcon-1.0: 
+  Libs/LibDBIcon-1.0:
     url: https://repos.wowace.com/wow/libdbicon-1-0/trunk
   Libs/lib-st: 
-    url: https://github.com/ddumont/lib-st.git 
+    url: https://github.com/ddumont/lib-st
     tag: latest
 
 required-dependencies:
