@@ -1,0 +1,14 @@
+## Interface: 90002
+## Title: LFG StopWatch
+## Notes: Start the Stopwatch when you enter a lfd or lfr and ends when your done
+## Author: Thoughts of Glought
+## Version: 2.0.0
+## SavedVariables: LfgStopwatchDB
+## SavedVariablesPerCharacter: LfgStopwatchCharDB
+## X-Curse-Project-ID: 67014
+
+LFG_Stopwatch_embeds.xml
+Locale\Locales.xml
+LFG_Stopwatch_core.lua
+
+Frames\LFG_Stopwatch_timelogframe.lua
