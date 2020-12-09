@@ -23,6 +23,7 @@ required-dependencies:
 - lib-st
 - libstub
 
+
 manual-changelog:
   filename: CHANGELOG.txt
   markup-type: markdown
