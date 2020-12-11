@@ -23,8 +23,15 @@ local AceConfig = LibStub("AceConfig-3.0")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0", true)
 local AceGui = LibStub("AceGUI-3.0")
 
+--From lua-users.org
+function trim5(s)
+    return s:match "^%s*(.*%S)" or ""
+end
+
 --local mainframe
 local TimeLogFrameLFGSW
+
+local inInstance, instanceType
 
 --Options
 LFGSWoptions = {
@@ -116,7 +123,12 @@ local charsettings = {
             Expansion = {
                 ["*"] = {
                     Dungeons = {},
-                    Raids = {}
+                    Raids = {},
+                    Torghast = {
+                        ["*"] = {
+                            IDs = {}
+                        }
+                    }
                 }
             }
         },
@@ -158,6 +170,22 @@ local charsettings = {
                         Difficulty = nil,
                         Expanion = nil
                     }
+                },
+                Torghast = {
+                    ["*"] = {
+                        -- layer name
+                        IDs = {
+                            ["*"] = {
+                                mapID = nil,
+                                Name = nil,
+                                TimesCompleted = 0,
+                                TimeCurr = "00h:00m:00s",
+                                TimeOld = "00h:00m:00s",
+                                Difficulty = nil,
+                                Expanion = nil
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -176,6 +204,39 @@ local expansionNames = {
     "SHADOWLANDS",
     "??",
     "???"
+}
+
+local torghastLayerNames = {
+    [1] = "Layer_1",
+    [2] = "Layer_2",
+    [3] = "Layer_3",
+    [4] = "Layer_4",
+    [5] = "Layer_5",
+    [6] = "Layer_6",
+    [7] = "Layer_7",
+    [8] = "Layer_8"
+}
+
+local torghastBossIDs = {
+    [151329] = true, --Warden Skoldus
+    [156239] = true, --Dark Aspirant Corrus
+    [170418] = true, --Goxul the Devourer
+    [153165] = true, --Custodian Thonar
+    [156015] = true, --Writhing Soulmass
+    [153382] = true, --Maw of the Maw
+    [159755] = true, --The Grand Malleare
+    [151331] = true, --Cellblock Sentinel
+    [153011] = true, --Binder Baritas
+    [159190] = true, --Synod
+    [153174] = true, --Watchers of Death
+    [155250] = true, --Decayspeaker
+    [171422] = true, --Arch-Suppressor Laguas
+    [169859] = true, --Observer Zelgar <The Third Eye>
+    [153451] = true, --Kosarus the Fallen
+    [155945] = true, --Gherus the Chained
+    [152995] = true, --Warden of Souls
+    [157122] = true, --Patrician Cromwell
+    [155251] = true --Elder Longbranch
 }
 
 function LFGSW:GetDelay(info)
@@ -200,19 +261,29 @@ end
 function LFGSW:OnEnable()
     LFGSW:RegisterEvent("PLAYER_ENTERING_WORLD", "startLfgStopWatch")
     LFGSW:RegisterEvent("SCENARIO_COMPLETED", "pauseLfgStopWatch")
+    LFGSW:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", "torghastBossKillCheck")
+    --LFGSW:RegisterEvent("PLAYER_LOGOUT","saveStopWatchTime")
+    --LFGSW:RegisterEvent("ADDON_LOADED","restoreStopWatchTimeTimer")
+    LFGSW:RegisterMessage("TORGHAST_LAYER_BOSS_KILLED", "pauseLfgStopWatch")
+    LFGSW:RegisterChatCommand("lfgsw_reset", "resetLfgStopWatch", true)
     LFGSW:RegisterChatCommand("lfgsw", "toggleLfgStopWatch", true)
     TimeLogFrameLFGSW:Enable()
 end
 
 function LFGSW:OnDisable()
-    LFGSW:UnregisterChatCommand("LFGSW")
+    LFGSW:UnregisterChatCommand("lfgsw")
+    LFGSW:UnregisterChatCommand("lfgsw_stop")
     LFGSW:UnregisterEvent("PLAYER_ENTERING_WORLD")
     LFGSW:UnregisterEvent("SCENARIO_COMPLETED")
+    LFGSW:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+    --LFGSW:UnregisterEvent("PLAYER_LOGOUT")
+    --LFGSW:UnregisterEvent("PLAYER_LOGIN")
+    LFGSW:UnregisterMessage("TORGHAST_LAYER_BOSS_KILLED")
     TimeLogFrameLFGSW:Disable()
 end
 
 function LFGSW:lfgswtimer()
-    if IsInGroup() and HasLFGRestrictions() then
+    if IsInGroup() and HasLFGRestrictions() or IsInJailersTower() then
         StopwatchFrame:Show()
         Stopwatch_Play()
         LFGSW.db.global.inprogress = true
@@ -270,14 +341,16 @@ function LFGSW:SendTimeMessage()
     end
 
     local timemessage = string.format("%sh:%sm:%ss", hoursplitFormat, minsplitFormat, secsplitFormat)
-    if minsplit ~= 0 and hoursplit ~= 0 then
-        if LFGSW.dbpc.char.enablemessage == true then
-            SendChatMessage(
-                L["Time taken to complete this instance(When i joined): "] .. timemessage,
-                "INSTANCE_CHAT",
-                nil,
-                nil
-            )
+    if IsInJailersTower() ~= true then
+        if minsplit ~= 0 and hoursplit ~= 0 then
+            if LFGSW.dbpc.char.enablemessage == true then
+                SendChatMessage(
+                    L["Time taken to complete this instance(When i joined): "] .. timemessage,
+                    "INSTANCE_CHAT",
+                    nil,
+                    nil
+                )
+            end
         end
     end
     LFGSW:UpdateTimeLog(timemessage)
@@ -285,13 +358,13 @@ end
 
 function LFGSW:UpdateTimeLog(timemessage, id)
     local LfgDungeonID
-    
+
     if id ~= nil then
-      LfgDungeonID = id
+        LfgDungeonID = id
     else
-      LfgDungeonID = select(10,GetInstanceInfo())
+        LfgDungeonID = select(10, GetInstanceInfo())
     end
-    
+
     local name,
         typeID,
         subtypeID,
@@ -314,11 +387,32 @@ function LFGSW:UpdateTimeLog(timemessage, id)
         minGearLevel = GetLFGDungeonInfo(LfgDungeonID)
 
     local expanName = expansionNames[expansionLevel]
+    local torghastLayer
     local oldTime
     local newTime
     local timesCompleted
     local timesCompletedFormat
     local instanceTable
+    local _MapidsTorghast
+
+    if (subtypeID == 4 and difficulty == 167) then
+        -- Splitting the Torghast name to get just the number from (Layer N) N=number
+        local var = {strsplit("(", name)} -- Layer N)
+        local var2 = {strsplit(")", var[2])} -- Layer N
+        local var3 = {strsplit(" ", var2[1])} -- N
+        local var4 = tonumber(var3[2])
+        torghastLayer = torghastLayerNames[var4]
+
+        _MapidsTorghast =
+            setmetatable(
+            {},
+            {
+                __newindex = function(table, key, value)
+                    LFGSW.dbpc.char.MapIDs.Expansion[expanName].Torghast[torghastLayer].IDs[key] = value
+                end
+            }
+        )
+    end
 
     local _MapidsDungeons =
         setmetatable(
@@ -370,6 +464,15 @@ function LFGSW:UpdateTimeLog(timemessage, id)
         _MapidsTimewalking[LfgDungeonID] = LfgDungeonID
         instanceTable = LFGSW.dbpc.char.TimeWalking.Raids
         instanceTable[LfgDungeonID].Name = name
+    elseif subtypeID == 4 and difficulty == 167 then
+        _MapidsTorghast[LfgDungeonID] = LfgDungeonID
+
+       local nameVar = {strsplit(":", name)}
+       local nameVar2 = trim5(nameVar[2])
+       local nameVar3 = {strsplit("(", nameVar2)}
+
+        instanceTable = LFGSW.dbpc.char.Expansion[expanName].Torghast[torghastLayer].IDs
+        instanceTable[LfgDungeonID].Name = nameVar3[1]
     end
 
     instanceTable[LfgDungeonID].Expanion = expanName
@@ -379,7 +482,7 @@ function LFGSW:UpdateTimeLog(timemessage, id)
     if instanceTable[LfgDungeonID].TimeCurr == "00h:00m:00s" then
         newTime = timemessage
         instanceTable[LfgDungeonID].TimeCurr = newTime
-    elseif timemessage <= instanceTable[LfgDungeonID].TimeCurr then
+    elseif timemessage < instanceTable[LfgDungeonID].TimeCurr then
         oldTime = instanceTable[LfgDungeonID].TimeCurr
         newTime = timemessage
         instanceTable[LfgDungeonID].TimeOld = oldTime
@@ -395,19 +498,35 @@ function LFGSW:startLfgStopWatch()
             LFGSW:ScheduleTimer("lfgswtimer", LFGSW:GetDelay())
             Stopwatch_Clear()
         end
-        if IsInGroup() ~= true then
+        if IsInGroup() ~= true or IsInJailersTower() ~= true then
             LFGSW.db.global.inprogress = false
         end
+        
     end
 end
 
 function LFGSW:pauseLfgStopWatch()
     if LFGSW.dbpc.char.offon then
-        if IsInGroup() and HasLFGRestrictions() then
+        if IsInGroup() and HasLFGRestrictions() or IsInJailersTower() then
             Stopwatch_Pause()
             LFGSW:SendTimeMessage()
             LFGSW.db.global.inprogress = false
             StopwatchFrame:Hide()
         end
     end
+end
+
+function LFGSW:torghastBossKillCheck(events, ...)
+    local timestamp, event, sourceGUID, sourceName, sourceFlags, destGUID, destName, destFlags = CombatLogGetCurrentEventInfo()
+    local unitType, _, _, _, _, id = strsplit("-", tostring(destFlags))
+
+    if event == "UNIT_DIED" and torghastBossIDs[tonumber(id)] then
+        LFGSW:SendMessage("TORGHAST_LAYER_BOSS_KILLED")
+    end
+end
+
+function LFGSW:resetLfgStopWatch()
+    Stopwatch_Pause()
+    LFGSW.db.global.inprogress = false
+    StopwatchFrame:Hide()
 end

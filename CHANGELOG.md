@@ -1,3 +1,12 @@
+=== V2.1.0
+* Added Torghast Support  
+The StopWatch will start when you enter a Torghast Wing.
+* The Timelog now has a "Torghast" Tab where all the Torghast Timelogs are saved
+  The "Torghast Layers:" Dropdown menu lists all the layers.
+  So when you finish a layer it will be listed under its layer aka Skoldus Hall (Layer 2) will be under "Layer 2"
+* Fixed issue with updating the "Old time".
+* Added Slash command "lfgsw_reset"  it will reset LFGSW incase of any issue (it stops the stopwatch, and sets Inprogress to false, and hides the stopwatch)
+
 === V2.0.0
 * Its been a long time since I worked on LFG_StopWatch but I have reworked how the timelogs are saved
 * Timelogs are now saved Dynamicly instead of being Hardcoded once you finish an LFG Dungeon or Raid it will be  

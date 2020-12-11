@@ -46,6 +46,7 @@ end
 local Raids = "Raids"
 local Dungeons = "Dungeons"
 local TimeWalking = "TimeWalking"
+local Torghast = "Torghast"
 
 --DungeonST
 local classicST = false
@@ -62,6 +63,18 @@ local shadowlandsST = false
 local timewalkingRaidST = false
 local shadowlandsRaidST = false
 
+--Shadowlands TorghastST
+local torghastST = {
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+}
+
 --Dungeons
 local classicData = {}
 local tbcData = {}
@@ -75,6 +88,18 @@ local LegionData = {}
 local TimewalkingRaidData = {}
 local ShadowlandRaidData = {}
 
+--Torghast
+local TorghastLayerData = {
+    [1] = {},
+    [2] = {},
+    [3] = {},
+    [4] = {},
+    [5] = {},
+    [6] = {},
+    [7] = {},
+    [8] = {}
+}
+
 local expansionNames = {
     [0] = "Classic",
     "TBC",
@@ -87,6 +112,17 @@ local expansionNames = {
     "SHADOWLANDS",
     "??",
     "???"
+}
+
+local torghastLayerNames = {
+    [1] = "Layer_1",
+    [2] = "Layer_2",
+    [3] = "Layer_3",
+    [4] = "Layer_4",
+    [5] = "Layer_5",
+    [6] = "Layer_6",
+    [7] = "Layer_7",
+    [8] = "Layer_8"
 }
 
 local groupList = {
@@ -123,6 +159,28 @@ local orderListRaid = {
     "SHADOWLANDS_Raid"
 }
 
+local groupListTorghast = {
+    Torghast_Layer_1 = L["Layer"] .. " 1",
+    Torghast_Layer_2 = L["Layer"] .. " 2",
+    Torghast_Layer_3 = L["Layer"] .. " 3",
+    Torghast_Layer_4 = L["Layer"] .. " 4",
+    Torghast_Layer_5 = L["Layer"] .. " 5",
+    Torghast_Layer_6 = L["Layer"] .. " 6",
+    Torghast_Layer_7 = L["Layer"] .. " 7",
+    Torghast_Layer_8 = L["Layer"] .. " 8"
+}
+
+local orderListTorghast = {
+    "Torghast_Layer_1",
+    "Torghast_Layer_2",
+    "Torghast_Layer_3",
+    "Torghast_Layer_4",
+    "Torghast_Layer_5",
+    "Torghast_Layer_6",
+    "Torghast_Layer_7",
+    "Torghast_Layer_8"
+}
+
 local timeDunCols = {
     {name = L["Dungeon Name"], width = 170, defaultsort = "dsc"},
     {name = L["Current Time"], width = 80, defaultsort = "dsc"},
@@ -132,6 +190,13 @@ local timeDunCols = {
 
 local timeRaidCols = {
     {name = L["Raid Name"], width = 170, defaultsort = "dsc"},
+    {name = L["Current Time"], width = 80, defaultsort = "dsc"},
+    {name = L["Old Time"], width = 80, defaultsort = "dsc"},
+    {name = L["Times Completed"], width = 100, defaultsort = "dsc"}
+}
+
+local timeTorghastCols = {
+    {name = L["Torghast Wing Name"], width = 170, defaultsort = "dsc"},
     {name = L["Current Time"], width = 80, defaultsort = "dsc"},
     {name = L["Old Time"], width = 80, defaultsort = "dsc"},
     {name = L["Times Completed"], width = 100, defaultsort = "dsc"}
@@ -206,6 +271,11 @@ function LFGSW_TL_Frame:hideSTs()
     if shadowlandsRaidST then
         shadowlandsRaidST:Hide()
     end
+    for i = 1, #torghastST do
+        if torghastST[i] then
+            torghastST[i]:Hide()
+        end
+    end
 end
 
 --SelectGroupFuntions---
@@ -218,6 +288,9 @@ local function SelectGroup(container, event, group)
             LFGSW_TL_Frame:DrawGroups(container, "MAIN", group)
         end,
         RAIDING = function()
+            LFGSW_TL_Frame:DrawGroups(container, "MAIN", group)
+        end,
+        TORGHAST = function()
             LFGSW_TL_Frame:DrawGroups(container, "MAIN", group)
         end,
         CLASSIC = function()
@@ -252,10 +325,34 @@ local function SelectGroup(container, event, group)
         end,
         SHADOWLANDS_Raid = function()
             LFGSW_TL_Frame:DrawGroups(container, Raids, group)
+        end,
+        Torghast_Layer_1 = function()
+            LFGSW_TL_Frame:DrawGroups(container, Torghast, group, 1)
+        end,
+        Torghast_Layer_2 = function()
+            LFGSW_TL_Frame:DrawGroups(container, Torghast, group, 2)
+        end,
+        Torghast_Layer_3 = function()
+            LFGSW_TL_Frame:DrawGroups(container, Torghast, group, 3)
+        end,
+        Torghast_Layer_4 = function()
+            LFGSW_TL_Frame:DrawGroups(container, Torghast, group, 4)
+        end,
+        Torghast_Layer_5 = function()
+            LFGSW_TL_Frame:DrawGroups(container, Torghast, group, 5)
+        end,
+        Torghast_Layer_6 = function()
+            LFGSW_TL_Frame:DrawGroups(container, Torghast, group, 6)
+        end,
+        Torghast_Layer_7 = function()
+            LFGSW_TL_Frame:DrawGroups(container, Torghast, group, 7)
+        end,
+        Torghast_Layer_8 = function()
+            LFGSW_TL_Frame:DrawGroups(container, Torghast, group, 8)
         end
     }
+
     GroupSwitch[group]()
-    
 end
 --End of SelectGroupFuntions---
 
@@ -272,7 +369,13 @@ function LFGSW_TL_Frame:SetUpFrames()
     frame:Hide()
 
     local LFGTabs = AceGui:Create("TabGroup")
-    LFGTabs:SetTabs({{text = L["Dungeons"], value = "Dun"}, {text = L["Raids"], value = "RAIDING"}})
+    LFGTabs:SetTabs(
+        {
+            {text = L["Dungeons"], value = "Dun"},
+            {text = L["Raids"], value = "RAIDING"},
+            {text = L["Torghast"], value = "TORGHAST"}
+        }
+    )
     LFGTabs:SetLayout("Flow")
     LFGTabs:SetWidth(470)
     LFGTabs:SetFullHeight(true)
@@ -282,9 +385,9 @@ function LFGSW_TL_Frame:SetUpFrames()
     frame:AddChild(LFGTabs)
 end
 
-local function createDropdowns(self, grouplist, orderlist, defaultGroup)
+local function createDropdowns(self, grouplist, orderlist, defaultGroup, title)
     local self = AceGui:Create("DropdownGroup")
-    self:SetTitle(L["Expansion: "])
+    self:SetTitle(title)
     self:SetGroupList(grouplist, orderlist)
     self:SetCallback("OnGroupSelected", SelectGroup)
     self:SetGroup(defaultGroup)
@@ -295,7 +398,7 @@ local function createDropdowns(self, grouplist, orderlist, defaultGroup)
     return self
 end
 
-function LFGSW_TL_Frame:createUpdateTimes(self, expansion, dataTable, updateType)
+function LFGSW_TL_Frame:createUpdateTimes(self, expansion, dataTable, updateType, torghastLayerNumber)
     if self then
         dataTable = {}
         local times = {}
@@ -312,6 +415,13 @@ function LFGSW_TL_Frame:createUpdateTimes(self, expansion, dataTable, updateType
         elseif updateType == TimeWalking then
             instanceMapIDTable = LFGSW.dbpc.char.MapIDs.TimeWalkingRaids
             instanceTable = LFGSW.dbpc.char.TimeWalking.Raids
+        elseif updateType == Torghast then
+            instanceMapIDTable =
+                LFGSW.dbpc.char.MapIDs.Expansion[expansionNames[expansion]].Torghast[
+                torghastLayerNames[torghastLayerNumber]
+            ].IDs
+            instanceTable =
+                LFGSW.dbpc.char.Expansion[expansionNames[expansion]].Torghast[torghastLayerNames[torghastLayerNumber]].IDs
         end
 
         for key, value in pairs(instanceMapIDTable) do
@@ -357,13 +467,31 @@ function LFGSW_TL_Frame:DrawGroups(container, groupType, group)
     local DrawGroupSwitch = {
         MAIN = {
             Dun = function()
-                local LFGDunDropDown = createDropdowns(LFGDunDropDown, groupList, orderList, "SHADOWLANDS")
+                local LFGDunDropDown =
+                    createDropdowns(LFGDunDropDown, groupList, orderList, "SHADOWLANDS", L["Expansion: "])
                 container:AddChild(LFGDunDropDown)
             end,
             RAIDING = function()
                 local LFGRaidsDropDown =
-                    createDropdowns(LFGRaidsDropDown, groupListRaid, orderListRaid, "SHADOWLANDS_Raid")
+                    createDropdowns(
+                    LFGRaidsDropDown,
+                    groupListRaid,
+                    orderListRaid,
+                    "SHADOWLANDS_Raid",
+                    L["Expansion: "]
+                )
                 container:AddChild(LFGRaidsDropDown)
+            end,
+            TORGHAST = function()
+                local LFGTorghastDropDown =
+                    createDropdowns(
+                    LFGTorghastDropDown,
+                    groupListTorghast,
+                    orderListTorghast,
+                    "Torghast_Layer_1",
+                    L["Torghast Layers: "]
+                )
+                container:AddChild(LFGTorghastDropDown)
             end
         },
         Dungeons = {
@@ -402,6 +530,32 @@ function LFGSW_TL_Frame:DrawGroups(container, groupType, group)
             SHADOWLANDS_Raid = function()
                 shadowlandsRaidST = LFGSW_TL_Frame:createSTs(shadowlandsRaidST, timeRaidCols, container)
             end
+        },
+        Torghast = {
+            Torghast_Layer_1 = function()
+                torghastST[1] = LFGSW_TL_Frame:createSTs(torghastST[1], timeTorghastCols, container)
+            end,
+            Torghast_Layer_2 = function()
+                torghastST[2] = LFGSW_TL_Frame:createSTs(torghastST[2], timeTorghastCols, container)
+            end,
+            Torghast_Layer_3 = function()
+                torghastST[3] = LFGSW_TL_Frame:createSTs(torghastST[3], timeTorghastCols, container)
+            end,
+            Torghast_Layer_4 = function()
+                torghastST[4] = LFGSW_TL_Frame:createSTs(torghastST[4], timeTorghastCols, container)
+            end,
+            Torghast_Layer_5 = function()
+                torghastST[5] = LFGSW_TL_Frame:createSTs(torghastST[5], timeTorghastCols, container)
+            end,
+            Torghast_Layer_6 = function()
+                torghastST[6] = LFGSW_TL_Frame:createSTs(torghastST[6], timeTorghastCols, container)
+            end,
+            Torghast_Layer_7 = function()
+                torghastST[7] = LFGSW_TL_Frame:createSTs(torghastST[7], timeTorghastCols, container)
+            end,
+            Torghast_Layer_8 = function()
+                torghastST[8] = LFGSW_TL_Frame:createSTs(torghastST[8], timeTorghastCols, container)
+            end
         }
     }
 
@@ -422,6 +576,15 @@ function LFGSW_TL_Frame:UpdateTimes()
     LFGSW_TL_Frame:createUpdateTimes(shadowlandsST, 8, shadowlandsData, Dungeons)
     LFGSW_TL_Frame:createUpdateTimes(timewalkingRaidST, nil, TimewalkingRaidData, TimeWalking)
     LFGSW_TL_Frame:createUpdateTimes(shadowlandsRaidST, 8, ShadowlandRaidData, Raids)
+    --Torghast Layers
+    LFGSW_TL_Frame:createUpdateTimes(torghastST[1], 8, TorghastLayerData[1], Torghast, 1)
+    LFGSW_TL_Frame:createUpdateTimes(torghastST[2], 8, TorghastLayerData[2], Torghast, 2)
+    LFGSW_TL_Frame:createUpdateTimes(torghastST[3], 8, TorghastLayerData[3], Torghast, 3)
+    LFGSW_TL_Frame:createUpdateTimes(torghastST[4], 8, TorghastLayerData[4], Torghast, 4)
+    LFGSW_TL_Frame:createUpdateTimes(torghastST[5], 8, TorghastLayerData[5], Torghast, 5)
+    LFGSW_TL_Frame:createUpdateTimes(torghastST[6], 8, TorghastLayerData[6], Torghast, 6)
+    LFGSW_TL_Frame:createUpdateTimes(torghastST[7], 8, TorghastLayerData[7], Torghast, 7)
+    LFGSW_TL_Frame:createUpdateTimes(torghastST[8], 8, TorghastLayerData[8], Torghast, 8)
 end
 
 --Ends of UpdateDungeon/Raids

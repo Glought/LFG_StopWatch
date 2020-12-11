@@ -44,3 +44,8 @@ L["Dungeons"] = true
 L["Raids"] = true
 L["Expansion: "] = true
 
+L["Layer"] = true
+L["Torghast Wing Name"] = true
+L["Torghast Layers: "] = true
+L["Torghast"] = true
+
