@@ -1,3 +1,6 @@
+=== V2.1.1
+* Fixed issue with Twisting Corridors
+
 === V2.1.0
 * Added Torghast Support  
 The StopWatch will start when you enter a Torghast Wing.

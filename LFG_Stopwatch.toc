@@ -2,7 +2,7 @@
 ## Title: LFG StopWatch
 ## Notes: Start the Stopwatch when you enter a lfd or lfr and ends when your done
 ## Author: Thoughts of Glought
-## Version: 2.1.0
+## Version: 2.1.1
 ## SavedVariables: LfgStopwatchDB
 ## SavedVariablesPerCharacter: LfgStopwatchCharDB
 ## X-Curse-Project-ID: 67014

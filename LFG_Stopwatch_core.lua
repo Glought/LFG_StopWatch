@@ -467,9 +467,16 @@ function LFGSW:UpdateTimeLog(timemessage, id)
     elseif subtypeID == 4 and difficulty == 167 then
         _MapidsTorghast[LfgDungeonID] = LfgDungeonID
 
-       local nameVar = {strsplit(":", name)}
-       local nameVar2 = trim5(nameVar[2])
-       local nameVar3 = {strsplit("(", nameVar2)}
+        local nameVar
+
+        if (string.find(name, ":")) then
+            nameVar = {strsplit(":", name)}
+        else
+            nameVar = {strsplit(",", name)}
+        end
+
+        local nameVar2 = trim5(nameVar[2])
+        local nameVar3 = {strsplit("(", nameVar2)}
 
         instanceTable = LFGSW.dbpc.char.Expansion[expanName].Torghast[torghastLayer].IDs
         instanceTable[LfgDungeonID].Name = nameVar3[1]
